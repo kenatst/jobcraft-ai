@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 
 const NewApplication = () => {
@@ -10,18 +11,10 @@ const NewApplication = () => {
   const [loadingStep, setLoadingStep] = useState("");
   const [generated, setGenerated] = useState(false);
   const [activeTab, setActiveTab] = useState<"cv" | "lettre">("cv");
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("jobcraft_gemini_key") || "");
-  const [showApiInput, setShowApiInput] = useState(!localStorage.getItem("jobcraft_gemini_key"));
 
   const handleGenerate = async () => {
     if (!offerText.trim()) return;
 
-    if (!apiKey.trim()) {
-      setShowApiInput(true);
-      return;
-    }
-
-    localStorage.setItem("jobcraft_gemini_key", apiKey);
     setLoading(true);
 
     const steps = ["Analyse de l'offre...", "Réécriture du CV...", "Génération de la lettre..."];
@@ -48,9 +41,11 @@ const NewApplication = () => {
 
     setLoading(false);
     setGenerated(true);
+    toast.success("Documents générés avec succès ✨");
   };
 
   const handleSave = () => {
+    toast.success("Candidature enregistrée ✓");
     navigate("/dashboard");
   };
 
@@ -59,29 +54,14 @@ const NewApplication = () => {
       <Navbar />
       <div className="pt-28 pb-16 px-6 max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-2">
-            Nouvelle <span className="text-accent-violet italic">candidature</span>
+          <h1 className="text-3xl md:text-5xl font-extrabold font-display text-center mb-4">
+            Nouvelle <span className="text-highlight italic">candidature</span>
           </h1>
           <p className="text-center text-muted-foreground mb-10">Colle l'offre d'emploi et laisse l'IA créer tes documents</p>
 
-          {showApiInput && (
-            <div className="bg-card rounded-3xl shadow-card p-6 mb-6">
-              <label className="block text-sm font-semibold mb-1.5">Clé API Gemini</label>
-              <input
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="AIza..."
-                className="w-full px-4 py-3 rounded-2xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Obtiens ta clé sur <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-primary underline">Google AI Studio</a>
-              </p>
-            </div>
-          )}
-
           {!generated ? (
             <>
-              <div className="bg-card rounded-3xl shadow-card p-8 mb-6">
+              <div className="bg-card/90 backdrop-blur-md rounded-[2rem] shadow-wow-sm border border-white/40 p-8 mb-6 hover:shadow-wow-lg transition-shadow">
                 <textarea
                   value={offerText}
                   onChange={(e) => setOfferText(e.target.value)}
@@ -92,22 +72,33 @@ const NewApplication = () => {
               </div>
 
               {loading ? (
-                <div className="bg-card rounded-3xl shadow-card p-10 text-center">
-                  <div className="w-full bg-muted rounded-full h-2 mb-4 overflow-hidden">
+                <div className="bg-highlight/5 rounded-[2rem] shadow-[0_0_40px_rgba(124,92,255,0.2)] border border-highlight/30 p-12 text-center relative overflow-hidden mb-6">
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="absolute inset-0 bg-highlight/10 pointer-events-none"
+                  />
+                  <div className="w-full bg-background rounded-full h-2 mb-6 overflow-hidden relative z-10 border border-white/20">
                     <motion.div
-                      className="h-full bg-primary rounded-full"
+                      className="h-full bg-highlight rounded-full shadow-[0_0_15px_rgba(124,92,255,0.8)]"
                       initial={{ width: "0%" }}
                       animate={{ width: "100%" }}
                       transition={{ duration: 4.5, ease: "linear" }}
                     />
                   </div>
-                  <p className="text-sm font-medium text-primary">{loadingStep}</p>
+                  <motion.p
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="text-sm font-bold text-highlight relative z-10"
+                  >
+                    ✨ {loadingStep}
+                  </motion.p>
                 </div>
               ) : (
                 <div className="text-center">
                   <button
                     onClick={handleGenerate}
-                    className="px-10 py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity"
+                    className="btn-primary px-10 py-4 text-lg hover:shadow-wow-lg hover:-translate-y-1 transition-all"
                   >
                     ✦ Générer mes documents →
                   </button>
@@ -117,27 +108,29 @@ const NewApplication = () => {
           ) : (
             <>
               {/* Tabs */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex flex-wrap gap-3 mb-8">
                 <button
                   onClick={() => setActiveTab("cv")}
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "cv" ? "bg-primary text-primary-foreground" : "bg-card shadow-card"}`}
+                  className={`px-6 py-3 rounded-full text-sm font-bold transition-all ${activeTab === "cv" ? "bg-primary text-primary-foreground shadow-wow-sm" : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
                 >
                   📄 CV personnalisé
                 </button>
                 <button
                   onClick={() => setActiveTab("lettre")}
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-colors ${activeTab === "lettre" ? "bg-primary text-primary-foreground" : "bg-card shadow-card"}`}
+                  className={`px-6 py-3 rounded-full text-sm font-bold transition-all ${activeTab === "lettre" ? "bg-primary text-primary-foreground shadow-wow-sm" : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    }`}
                 >
                   ✉️ Lettre de motivation
                 </button>
               </div>
 
               {/* Document preview */}
-              <div className="bg-card rounded-3xl shadow-card overflow-hidden mb-6">
-                <div className="flex items-center gap-2 px-5 py-3 bg-muted/50 border-b border-border/50">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
+              <div className="bg-background rounded-[2rem] shadow-wow-lg border border-white/50 overflow-hidden mb-10">
+                <div className="flex items-center gap-2 px-5 py-4 bg-card/80 border-b border-border/50 backdrop-blur-md">
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#FF5F56] border border-[#E0443E]" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] border border-[#DEA123]" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#27C93F] border border-[#1AAB29]" />
                 </div>
                 <div className="p-2">
                   <div
@@ -151,15 +144,15 @@ const NewApplication = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button className="btn-outline px-8 py-3.5 text-sm">
                   ⬇ Télécharger en PDF
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-6 py-3 rounded-full bg-foreground text-card font-semibold text-sm hover:opacity-90 transition-opacity"
+                  className="btn-primary px-8 py-3.5 text-sm hover:shadow-wow-sm"
                 >
-                  Ajouter à mes candidatures
+                  Enregistrer la candidature
                 </button>
               </div>
             </>

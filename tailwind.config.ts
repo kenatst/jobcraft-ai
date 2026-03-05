@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Space Grotesk", "system-ui", "sans-serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Space Grotesk", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -37,6 +38,10 @@ export default {
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -75,6 +80,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         "2xl": "1.25rem",
         "3xl": "1.5rem",
+        "4xl": "2rem",
+      },
+      boxShadow: {
+        'wow': '0 8px 30px rgba(0, 0, 0, 0.12)',
+        'wow-sm': '0 4px 15px rgba(0, 0, 0, 0.08)',
+        'wow-lg': '0 12px 40px rgba(0, 0, 0, 0.16)',
       },
       keyframes: {
         "accordion-down": {
@@ -97,5 +108,6 @@ export default {
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;

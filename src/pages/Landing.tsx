@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion, Variants } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BackgroundIcons from "@/components/BackgroundIcons";
+
+const FADE_UP: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+};
 
 const testimonials = [
   {
@@ -77,6 +83,7 @@ const demoEntretien = `<div style="font-family: 'Space Grotesk', system-ui; colo
 
 const Landing = () => {
   const [demoTab, setDemoTab] = useState<"cv" | "lettre" | "entretien">("cv");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const demoContent = { cv: demoCV, lettre: demoLettre, entretien: demoEntretien };
 
@@ -86,38 +93,45 @@ const Landing = () => {
       <Navbar />
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-32 pb-16 px-6 z-10">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
+      <section className="relative pt-32 pb-16 px-6 z-10 overflow-hidden">
+        <motion.div
+          initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+          className="max-w-5xl mx-auto text-center"
+        >
+          <motion.div variants={FADE_UP} className="flex flex-wrap justify-center gap-3 mb-10">
             {["✦ CV adapté en 30 secondes", "✦ Lettre sur mesure", "✦ Coaching entretien IA"].map((badge, i) => (
-              <span key={i} className="pill-badge text-foreground/80">{badge}</span>
+              <span key={i} className="pill-badge text-foreground/80 shadow-wow-sm bg-white/50 backdrop-blur-md border hover:scale-105 transition-transform cursor-default">{badge}</span>
             ))}
-          </div>
+          </motion.div>
 
-          <h1 className="hero-title mb-6">
+          <motion.h1 variants={FADE_UP} className="hero-title mb-6 font-display">
             Décroche le job<br />
-            <span className="text-accent-violet italic">que tu mérites</span>
-          </h1>
+            <span className="text-accent italic">que tu mérites</span>
+          </motion.h1>
 
-          <p className="text-lg text-muted-foreground max-w-[560px] mx-auto mb-10 leading-relaxed">
+          <motion.p variants={FADE_UP} className="text-lg md:text-xl text-muted-foreground font-medium max-w-[600px] mx-auto mb-10 leading-relaxed">
             Colle une offre d'emploi. JobCraft réécrit ton CV, génère ta lettre de motivation et te prépare à l'entretien. En 30 secondes.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-            <Link to="/onboarding" className="btn-primary text-lg !px-8 !py-4">
-              ✦ Essayer gratuitement →
+          <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+            <Link to="/onboarding" className="btn-primary text-lg !px-8 !py-4 shadow-wow-sm group">
+              <span className="group-hover:rotate-12 transition-transform inline-block mr-2">✦</span> Essayer gratuitement <span className="group-hover:translate-x-1 transition-transform inline-block ml-1">→</span>
             </Link>
-            <a href="#demo" className="btn-outline text-lg !px-8 !py-4">
+            <a href="#demo" className="btn-outline text-lg !px-8 !py-4 bg-white/30 backdrop-blur hover:bg-white/60">
               Voir une démo
             </a>
-          </div>
+          </motion.div>
 
-          <p className="text-sm text-muted-foreground mb-14">
-            3 essais gratuits · Sans carte bancaire · PDF téléchargeable
-          </p>
+          <motion.p variants={FADE_UP} className="text-sm font-medium text-muted-foreground mb-16">
+            3 essais gratuits · Sans carte bancaire · Algorithme anti-ATS
+          </motion.p>
 
           {/* Hero browser mockup */}
-          <div className="browser-mockup max-w-3xl mx-auto">
+          <motion.div
+            variants={FADE_UP}
+            className="browser-mockup max-w-3xl mx-auto shadow-wow-lg border border-white/50"
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+          >
             <div className="browser-mockup-chrome">
               <div className="browser-dot bg-destructive/60" />
               <div className="browser-dot bg-highlight/60" />
@@ -151,6 +165,40 @@ const Landing = () => {
                 </div>
               </div>
             </div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ═══ HOW IT WORKS ═══ */}
+      <section className="py-20 px-6 z-10 relative">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="section-title mb-14 font-display">
+            Comment ça <span className="text-accent italic">marche</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { step: "1", icon: "📋", title: "Colle ton offre", desc: "Copie-colle le texte de l'offre d'emploi ou son URL. L'IA analyse les compétences et mots-clés demandés.", color: "#FFF7ED" },
+              { step: "2", icon: "✨", title: "L'IA génère", desc: "En 30 secondes, JobCraft crée un CV sur mesure, une lettre de motivation et une fiche d'entretien.", color: "#F5F3FF" },
+              { step: "3", icon: "🚀", title: "Tu postules", desc: "Télécharge tes documents, postule en confiance et suis l'avancement de tes candidatures.", color: "#F0FDF4" },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                whileHover={{ y: -5 }}
+                className="relative rounded-[2rem] p-8 border border-white/50 shadow-sm text-center"
+                style={{ background: item.color }}
+              >
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-extrabold">
+                  {item.step}
+                </div>
+                <span className="text-5xl mb-5 block mt-2">{item.icon}</span>
+                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                <p className="text-foreground/70 text-sm leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -158,7 +206,12 @@ const Landing = () => {
       {/* ═══ STATS ═══ */}
       <section className="py-12 px-6 z-10 relative">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-card rounded-3xl shadow-card p-8 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bg-card/70 backdrop-blur-lg rounded-[2rem] shadow-wow-sm border border-white/40 p-10 grid grid-cols-1 sm:grid-cols-3 gap-8 text-center"
+          >
             {[
               { value: "12 847", label: "utilisateurs actifs" },
               { value: "94%", label: "taux de succès entretiens" },
@@ -169,19 +222,48 @@ const Landing = () => {
                 <p className="text-sm text-muted-foreground mt-1">{s.label}</p>
               </div>
             ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ TRUST LOGOS ═══ */}
+      <section className="py-10 px-6 z-10 relative overflow-hidden">
+        <p className="text-center text-sm font-semibold text-muted-foreground mb-6 uppercase tracking-wider">Ils nous font confiance</p>
+        <div className="relative max-w-4xl mx-auto">
+          <div className="flex items-center justify-center gap-12 flex-wrap opacity-40">
+            {["TechCorp", "Agence Webflow", "StartupFactory", "DataViz Inc", "DesignStudio", "CloudOps"].map((name, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-lg md:text-xl font-extrabold font-display text-foreground select-none"
+              >
+                {name}
+              </motion.span>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ═══ TESTIMONIALS ═══ */}
-      <section className="py-20 px-6 z-10 relative">
+      < section className="py-20 px-6 z-10 relative" >
         <div className="max-w-6xl mx-auto">
-          <h2 className="section-title mb-14">
-            Ils ont <span className="text-accent-violet italic">décroché</span> leur job
+          <h2 className="section-title mb-14 font-display">
+            Ils ont <span className="text-accent italic">décroché</span> leur job
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((t, i) => (
-              <div key={i} className="rounded-3xl p-8 flex flex-col gap-4" style={{ background: t.bg }}>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -5, boxShadow: '0 12px 40px rgba(0,0,0,0.08)' }}
+                className="rounded-4xl p-8 flex flex-col gap-4 border border-white/50 shadow-sm" style={{ background: t.bg }}
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-lg" style={{ background: t.avatarBg }}>
                     {t.initial}
@@ -195,46 +277,46 @@ const Landing = () => {
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-success bg-success/10 px-3 py-1 rounded-full w-fit">
                   ✓ Entretien décroché
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
       {/* ═══ FEATURES ═══ */}
-      <section id="fonctionnalites" className="py-20 px-6 z-10 relative">
+      < section id="fonctionnalites" className="py-20 px-6 z-10 relative" >
         <div className="max-w-6xl mx-auto">
-          <h2 className="section-title mb-14">
-            Tout ce qu'il <span className="text-accent-violet italic">faut</span> pour réussir
+          <h2 className="section-title mb-14 font-display">
+            Tout ce qu'il <span className="text-accent italic">faut</span> pour réussir
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="rounded-3xl p-8" style={{ background: "#FFF7ED" }}>
+            <motion.div whileHover={{ y: -5 }} className="rounded-4xl p-8 border border-white/50 shadow-sm" style={{ background: "#FFF7ED" }}>
               <span className="text-4xl mb-4 block">📄</span>
               <h3 className="text-xl font-bold mb-2">Sniper CV</h3>
               <p className="text-foreground/70 leading-relaxed text-sm mb-4">
                 Ton CV est réécrit mot pour mot pour coller parfaitement à chaque offre d'emploi. L'IA analyse les mots-clés ATS, restructure tes expériences et met en avant les compétences demandées. Résultat : un CV qui passe les filtres automatiques des recruteurs.
               </p>
-              <span className="pill-badge text-primary text-xs font-semibold">Passe les filtres ATS</span>
-            </div>
-            <div className="rounded-3xl p-8" style={{ background: "#F0FDF4" }}>
+              <span className="pill-badge text-primary text-xs font-semibold bg-white border-white/50">Passe les filtres ATS</span>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="rounded-4xl p-8 border border-white/50 shadow-sm" style={{ background: "#F0FDF4" }}>
               <span className="text-4xl mb-4 block">✉️</span>
               <h3 className="text-xl font-bold mb-2">Lettre Parfaite</h3>
               <p className="text-foreground/70 leading-relaxed text-sm mb-4">
                 Une lettre de motivation unique pour chaque candidature. L'IA s'adapte au ton de l'entreprise — startup décontractée ou grand groupe corporate — et construit un argumentaire percutant basé sur ton profil et les exigences du poste.
               </p>
-              <span className="pill-badge text-success text-xs font-semibold">Ton adapté à l'entreprise</span>
-            </div>
-            <div className="rounded-3xl p-8" style={{ background: "#FAF5FF" }}>
+              <span className="pill-badge text-success text-xs font-semibold bg-white border-white/50">Ton adapté à l'entreprise</span>
+            </motion.div>
+            <motion.div whileHover={{ y: -5 }} className="rounded-4xl p-8 border border-white/50 shadow-sm" style={{ background: "#FAF5FF" }}>
               <span className="text-4xl mb-4 block">🎯</span>
               <h3 className="text-xl font-bold mb-2">Coach Entretien</h3>
               <p className="text-foreground/70 leading-relaxed text-sm mb-4">
                 Une fiche de préparation complète en 5 sections : compétences recherchées, questions probables avec réponses, questions pièges avec stratégies, tes arguments clés, et les erreurs à éviter. Tout est personnalisé pour TON profil et CE poste.
               </p>
-              <span className="pill-badge text-accent text-xs font-semibold">5 sections complètes</span>
-            </div>
+              <span className="pill-badge text-accent text-xs font-semibold bg-white border-white/50">5 sections complètes</span>
+            </motion.div>
           </div>
           {/* Bonus card */}
-          <div className="rounded-3xl p-8" style={{ background: "#FFFBEB" }}>
+          <motion.div whileHover={{ y: -5 }} className="rounded-4xl p-10 border border-white/50 shadow-sm" style={{ background: "#FFFBEB" }}>
             <div className="flex flex-col md:flex-row items-start gap-6">
               <div className="flex-1">
                 <span className="text-4xl mb-4 block">📊</span>
@@ -254,17 +336,22 @@ const Landing = () => {
                 </svg>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </section >
 
       {/* ═══ DEMO ═══ */}
-      <section id="demo" className="py-20 px-6 z-10 relative">
+      < section id="demo" className="py-20 px-6 z-10 relative" >
         <div className="max-w-4xl mx-auto">
-          <h2 className="section-title mb-14">
-            Un aperçu de la <span className="text-accent-violet italic">magie</span>
+          <h2 className="section-title mb-14 font-display">
+            Un aperçu de la <span className="text-accent italic">magie</span>
           </h2>
-          <div className="browser-mockup">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="browser-mockup shadow-wow-lg border border-border/50"
+          >
             <div className="browser-mockup-chrome">
               <div className="browser-dot bg-destructive/60" />
               <div className="browser-dot bg-highlight/60" />
@@ -283,30 +370,37 @@ const Landing = () => {
                 <button
                   key={tab.key}
                   onClick={() => setDemoTab(tab.key)}
-                  className={`px-6 py-3 text-sm font-semibold transition-colors ${
-                    demoTab === tab.key
-                      ? "border-b-2 border-primary text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`px-6 py-3 text-sm font-semibold transition-colors ${demoTab === tab.key
+                    ? "border-b-2 border-primary text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
-            <div className="p-6 md:p-8 min-h-[300px]" dangerouslySetInnerHTML={{ __html: demoContent[demoTab] }} />
-          </div>
+            <div className="p-6 md:p-8 min-h-[300px]">
+              <motion.div
+                key={demoTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                dangerouslySetInnerHTML={{ __html: demoContent[demoTab] }}
+              />
+            </div>
+          </motion.div>
         </div>
-      </section>
+      </section >
 
       {/* ═══ PRICING ═══ */}
-      <section id="tarifs" className="py-20 px-6 z-10 relative">
+      < section id="tarifs" className="py-20 px-6 z-10 relative" >
         <div className="max-w-5xl mx-auto">
-          <h2 className="section-title mb-14">
-            Des prix <span className="text-accent-violet italic">simples</span>
+          <h2 className="section-title mb-14 font-display">
+            Des prix <span className="text-accent italic">simples</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {/* Gratuit */}
-            <div className="bg-card rounded-3xl p-8 shadow-card flex flex-col">
+            <motion.div whileHover={{ y: -8 }} className="bg-card rounded-4xl p-8 shadow-wow-sm flex flex-col border border-white/50">
               <span className="pill-badge text-xs font-semibold mb-4 w-fit">Pour commencer</span>
               <div className="mb-6">
                 <span className="text-5xl font-extrabold">0€</span>
@@ -320,10 +414,10 @@ const Landing = () => {
                 <li className="flex items-center gap-2 text-sm text-muted-foreground line-through"><span>✗</span> Suivi candidatures</li>
               </ul>
               <Link to="/onboarding" className="btn-outline w-full text-center">Commencer gratuitement</Link>
-            </div>
+            </motion.div>
 
             {/* Starter */}
-            <div className="bg-card rounded-3xl p-8 shadow-card border-2 border-primary flex flex-col relative">
+            <motion.div whileHover={{ y: -8 }} className="bg-card rounded-4xl p-8 shadow-wow-sm border-2 border-primary flex flex-col relative">
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
                 Le plus populaire
               </span>
@@ -339,11 +433,11 @@ const Landing = () => {
                 <li className="flex items-center gap-2 text-sm"><span className="text-primary font-bold">✓</span> Suivi candidatures</li>
                 <li className="flex items-center gap-2 text-sm"><span className="text-primary font-bold">✓</span> Support email</li>
               </ul>
-              <Link to="/onboarding" className="btn-primary w-full text-center">Commencer avec Starter</Link>
-            </div>
+              <Link to="/onboarding" className="btn-primary w-full text-center hover:shadow-wow-sm">Commencer avec Starter</Link>
+            </motion.div>
 
             {/* Pro */}
-            <div className="rounded-3xl p-8 shadow-card flex flex-col bg-foreground text-card">
+            <motion.div whileHover={{ y: -8 }} className="rounded-4xl p-8 shadow-wow-lg flex flex-col bg-foreground text-card">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-highlight text-highlight-foreground w-fit mb-4">
                 Tout inclus
               </span>
@@ -358,37 +452,93 @@ const Landing = () => {
                 <li className="flex items-center gap-2 text-sm"><span className="text-highlight font-bold">✓</span> Support prioritaire</li>
                 <li className="flex items-center gap-2 text-sm"><span className="text-highlight font-bold">✓</span> Export multi-formats</li>
               </ul>
-              <Link to="/onboarding" className="inline-flex items-center justify-center w-full px-7 py-3.5 rounded-full font-bold text-sm bg-highlight text-highlight-foreground transition-all hover:brightness-110">
+              <Link to="/onboarding" className="inline-flex items-center justify-center w-full px-7 py-3.5 rounded-full font-bold text-sm bg-highlight text-highlight-foreground transition-all hover:brightness-110 hover:shadow-wow-sm">
                 Passer Pro
               </Link>
-            </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FAQ ═══ */}
+      <section className="py-20 px-6 z-10 relative">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="section-title mb-14 font-display">
+            Questions <span className="text-accent italic">fréquentes</span>
+          </h2>
+          <div className="space-y-4">
+            {[
+              { q: "Comment fonctionne la génération de CV ?", a: "L'IA analyse l'offre d'emploi, identifie les compétences et mots-clés demandés, puis réécrit ton CV pour maximiser la correspondance. Le résultat passe les filtres ATS automatiques des recruteurs." },
+              { q: "Mes données sont-elles en sécurité ?", a: "Absolument. Toutes tes données sont stockées localement dans ton navigateur. Nous ne transférons rien vers nos serveurs. Ta clé API reste privée." },
+              { q: "Puis-je annuler mon abonnement ?", a: "Oui, à tout moment et sans engagement. Tu conserves l'accès jusqu'à la fin de ta période de facturation." },
+              { q: "Quel modèle d'IA est utilisé ?", a: "JobCraft utilise l'API Gemini de Google, l'un des modèles les plus performants pour la compréhension et la rédaction de textes professionnels." },
+              { q: "Les CV générés passent-ils les filtres ATS ?", a: "Oui ! C'est notre spécialité. L'algorithme anti-ATS analyse les mots-clés de l'offre et les intègre naturellement dans ton CV. Score moyen de correspondance : 87%." },
+              { q: "Combien de temps faut-il pour générer des documents ?", a: "Environ 30 secondes pour un pack complet (CV + lettre + fiche entretien). C'est 50x plus rapide que de le faire soi-même." },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-card/80 backdrop-blur-sm rounded-2xl border border-white/50 overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between p-6 text-left"
+                >
+                  <span className="font-bold text-sm pr-4">{item.q}</span>
+                  <motion.span
+                    animate={{ rotate: openFaq === i ? 45 : 0 }}
+                    className="text-primary text-xl font-bold shrink-0"
+                  >
+                    +
+                  </motion.span>
+                </button>
+                {openFaq === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="px-6 pb-6"
+                  >
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ═══ FINAL CTA ═══ */}
-      <section className="py-24 px-6 z-10 relative">
-        <div className="max-w-4xl mx-auto bg-foreground rounded-[30px] p-12 md:p-16 text-center">
-          <h2 className="text-4xl md:text-6xl font-extrabold text-card mb-2" style={{ lineHeight: 1.1 }}>
+      < section className="py-24 px-6 z-10 relative" >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="max-w-4xl mx-auto bg-foreground rounded-[2.5rem] p-12 md:p-16 text-center shadow-wow-lg overflow-hidden relative"
+        >
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent pointer-events-none" />
+          <h2 className="text-4xl md:text-6xl font-extrabold font-display text-card mb-2 relative z-10" style={{ lineHeight: 1.1 }}>
             Prêt à décrocher
           </h2>
-          <h2 className="text-4xl md:text-6xl font-extrabold mb-6" style={{ lineHeight: 1.1 }}>
-            <span className="text-highlight italic">ton prochain job ?</span>
+          <h2 className="text-4xl md:text-6xl font-extrabold font-display mb-6 relative z-10" style={{ lineHeight: 1.1 }}>
+            <span className="text-accent italic">ton prochain job ?</span>
           </h2>
           <p className="text-card/50 mb-8 max-w-lg mx-auto">
             Rejoins 12 847 candidats qui utilisent JobCraft AI
           </p>
           <Link
             to="/onboarding"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-card/30 text-card font-bold text-lg hover:bg-card/10 transition-colors"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-full border-2 border-card/30 text-card font-bold text-lg hover:bg-card hover:text-foreground transition-colors relative z-10"
           >
             Commence maintenant →
           </Link>
-        </div>
-      </section>
+        </motion.div>
+      </section >
 
       <Footer />
-    </div>
+    </div >
   );
 };
 

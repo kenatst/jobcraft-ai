@@ -37,8 +37,8 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold">
-              Mes <span className="text-accent-violet italic">candidatures</span>
+            <h1 className="text-3xl md:text-5xl font-extrabold font-display">
+              Mes <span className="text-accent italic">candidatures</span>
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -47,7 +47,7 @@ const Dashboard = () => {
             </span>
             <Link
               to="/nouvelle-candidature"
-              className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
+              className="btn-primary py-2.5 text-sm"
             >
               + Nouvelle candidature
             </Link>
@@ -65,9 +65,8 @@ const Dashboard = () => {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                filter === f.key ? "bg-primary text-primary-foreground" : "bg-card shadow-card text-foreground hover:bg-muted"
-              }`}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${filter === f.key ? "bg-primary text-primary-foreground shadow-wow-sm" : "bg-card border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
             >
               {f.label}
             </button>
@@ -78,16 +77,45 @@ const Dashboard = () => {
         {filtered.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-3xl shadow-card p-16 text-center"
+            className="bg-card/70 backdrop-blur-lg rounded-[2rem] shadow-wow-sm border border-white/40 p-16 text-center"
           >
-            <p className="text-5xl mb-4">📭</p>
-            <h2 className="text-xl font-bold mb-2">Aucune candidature pour l'instant</h2>
-            <p className="text-muted-foreground mb-6">Colle une offre d'emploi et laisse l'IA faire le reste</p>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+              className="text-7xl mb-6"
+            >
+              🚀
+            </motion.div>
+            <h2 className="text-2xl font-extrabold font-display mb-3">Prêt à décrocher ton prochain job ?</h2>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">3 étapes simples pour générer ta candidature parfaite</p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10 text-left max-w-lg mx-auto">
+              {[
+                { step: "1", icon: "📋", text: "Colle une offre d'emploi" },
+                { step: "2", icon: "✨", text: "L'IA génère CV + Lettre" },
+                { step: "3", icon: "📨", text: "Télécharge et postule" },
+              ].map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.15 }}
+                  className="flex items-center gap-3 bg-background rounded-2xl p-4 flex-1"
+                >
+                  <span className="text-2xl">{s.icon}</span>
+                  <div>
+                    <span className="text-xs font-bold text-primary">Étape {s.step}</span>
+                    <p className="text-sm font-semibold">{s.text}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
             <Link
               to="/nouvelle-candidature"
-              className="inline-block px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
+              className="btn-primary text-sm hover:shadow-wow-lg hover:-translate-y-1 transition-all"
             >
-              + Nouvelle candidature
+              + Créer ma première candidature
             </Link>
           </motion.div>
         ) : (
@@ -99,7 +127,8 @@ const Dashboard = () => {
                   key={app.id}
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="bg-card rounded-3xl shadow-card p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="bg-card/90 backdrop-blur-sm rounded-[2rem] shadow-wow-sm border border-white/40 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:shadow-wow-lg transition-all"
                 >
                   <div>
                     <h3 className="font-bold text-lg">{app.poste}</h3>
@@ -111,14 +140,14 @@ const Dashboard = () => {
                     </span>
                     <Link
                       to={`/candidature/${app.id}`}
-                      className="px-4 py-2 rounded-full text-xs font-semibold border border-border hover:border-primary hover:text-primary transition-colors"
+                      className="px-5 py-2.5 rounded-full text-xs font-semibold border-2 border-border hover:border-primary hover:text-primary transition-colors bg-background"
                     >
                       Voir les documents
                     </Link>
                     {app.statut === "entretien" && (
                       <Link
                         to={`/preparation-entretien/${app.id}`}
-                        className="px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground animate-pulse-coral"
+                        className="btn-highlight py-2.5 text-xs animate-pulse-coral relative"
                       >
                         🎯 Préparer l'entretien
                       </Link>
