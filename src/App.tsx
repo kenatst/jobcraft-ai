@@ -26,6 +26,7 @@ const App = () => (
           <Route path="/nouvelle-candidature" element={<NewApplication />} />
           <Route path="/candidature/:id" element={<ApplicationDetail />} />
           <Route path="/preparation-entretien/:id" element={<InterviewPrep />} />
+          <Route path="/candidature/:id/entretien" element={<InterviewPrep />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
