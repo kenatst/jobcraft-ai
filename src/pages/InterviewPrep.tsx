@@ -1,42 +1,51 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
+import BackgroundIcons from "@/components/BackgroundIcons";
+import { exportToPDF, generateFilename } from "@/lib/exportPdf";
 
 const mockInterview = {
   ce_quils_cherchent: [
-    { competence: "Maîtrise de React et TypeScript", explication: "Le poste nécessite une expérience solide en développement frontend moderne." },
-    { competence: "Expérience en architecture logicielle", explication: "Capacité à concevoir des systèmes scalables et maintenables." },
-    { competence: "Travail en équipe agile", explication: "Habitude des sprints, stand-ups et collaboration avec les product managers." },
-    { competence: "Communication claire", explication: "Être capable d'expliquer des concepts techniques à des non-techniques." },
-    { competence: "Autonomie et proactivité", explication: "Prendre des initiatives et résoudre des problèmes sans supervision constante." },
+    { competence: "Maîtrise de React et TypeScript", explication: "Le poste nécessite une expérience solide en développement frontend moderne.", comment_valoriser: "Parlez de vos projets React concrets avec métriques (utilisateurs, performance)." },
+    { competence: "Expérience en architecture logicielle", explication: "Capacité à concevoir des systèmes scalables et maintenables.", comment_valoriser: "Décrivez les choix d'architecture que vous avez faits et leur impact." },
+    { competence: "Travail en équipe agile", explication: "Habitude des sprints, stand-ups et collaboration avec les product managers.", comment_valoriser: "Donnez un exemple concret de sprint réussi ou d'amélioration de process." },
+    { competence: "Communication claire", explication: "Être capable d'expliquer des concepts techniques à des non-techniques.", comment_valoriser: "Racontez quand vous avez vulgarisé un sujet technique pour un client/manager." },
+    { competence: "Autonomie et proactivité", explication: "Prendre des initiatives et résoudre des problèmes sans supervision constante.", comment_valoriser: "Citez une initiative personnelle qui a créé de la valeur pour l'équipe." },
   ],
   questions_probables: [
-    { question: "Parlez-moi de votre parcours professionnel", reponse: "Structurez en 3 temps : formation, expériences clés, pourquoi ce poste." },
-    { question: "Pourquoi voulez-vous rejoindre notre entreprise ?", reponse: "Montrez que vous connaissez leur produit/mission et liez à vos aspirations." },
-    { question: "Décrivez un projet dont vous êtes fier", reponse: "Utilisez la méthode STAR : Situation, Tâche, Action, Résultat." },
-    { question: "Comment gérez-vous les conflits en équipe ?", reponse: "Exemple concret de résolution constructive avec un collègue." },
-    { question: "Où vous voyez-vous dans 3 ans ?", reponse: "Montrez de l'ambition alignée avec les perspectives du poste." },
-    { question: "Quelle est votre plus grande faiblesse ?", reponse: "Choisissez une vraie faiblesse et montrez comment vous travaillez dessus." },
-    { question: "Comment restez-vous à jour techniquement ?", reponse: "Veille, conférences, projets perso, communautés." },
-    { question: "Avez-vous des questions pour nous ?", reponse: "Préparez 2-3 questions sur l'équipe, les défis techniques, la vision produit." },
+    { question: "Parlez-moi de votre parcours professionnel", reponse_suggeree: "Structurez en 3 temps : formation, expériences clés, pourquoi ce poste. Montrez la cohérence de votre parcours.", difficulte: "facile" as const },
+    { question: "Pourquoi voulez-vous rejoindre notre entreprise ?", reponse_suggeree: "Montrez que vous connaissez leur produit/mission et liez à vos aspirations professionnelles.", difficulte: "facile" as const },
+    { question: "Décrivez un projet dont vous êtes fier", reponse_suggeree: "Utilisez la méthode STAR : Situation, Tâche, Action, Résultat avec des chiffres concrets.", difficulte: "moyen" as const },
+    { question: "Comment gérez-vous les conflits en équipe ?", reponse_suggeree: "Exemple concret de résolution constructive. Montrez empathie + pragmatisme.", difficulte: "moyen" as const },
+    { question: "Où vous voyez-vous dans 3 ans ?", reponse_suggeree: "Montrez de l'ambition alignée avec les perspectives du poste sans paraître opportuniste.", difficulte: "moyen" as const },
+    { question: "Quelle est votre plus grande faiblesse ?", reponse_suggeree: "Choisissez une vraie faiblesse, montrez comment vous travaillez dessus avec un exemple récent.", difficulte: "difficile" as const },
+    { question: "Comment restez-vous à jour techniquement ?", reponse_suggeree: "Veille active, conférences, projets perso, communautés. Soyez spécifique.", difficulte: "facile" as const },
+    { question: "Avez-vous des questions pour nous ?", reponse_suggeree: "Préparez 2-3 questions sur l'équipe, les défis techniques, la vision produit. Montrez votre intérêt.", difficulte: "facile" as const },
   ],
   questions_pieges: [
-    { question: "Pourquoi avez-vous quitté votre dernier poste ?", conseil: "Restez positif. Parlez d'envie de nouveaux défis, jamais de conflits." },
-    { question: "Quelle est votre prétention salariale ?", conseil: "Donnez une fourchette basée sur le marché. Ne soyez pas le premier à donner un chiffre." },
-    { question: "Un collègue ne fait pas son travail, que faites-vous ?", conseil: "Communication directe d'abord, puis escalade si nécessaire. Montrez de l'empathie." },
-    { question: "Êtes-vous prêt à faire des heures supplémentaires ?", conseil: "Montrez de la flexibilité tout en posant vos limites de manière professionnelle." },
+    { question: "Pourquoi avez-vous quitté votre dernier poste ?", le_piege: "Ils testent votre loyauté et votre capacité à rester positif.", strategie_reponse: "Parlez d'envie de nouveaux défis et de progression. Ne critiquez jamais l'ancien employeur." },
+    { question: "Quelle est votre prétention salariale ?", le_piege: "Donner un chiffre trop bas ou trop haut peut vous éliminer.", strategie_reponse: "Donnez une fourchette basée sur le marché. Retournez la question : 'Quel est le budget prévu pour ce poste ?'" },
+    { question: "Un collègue ne fait pas son travail, que faites-vous ?", le_piege: "Ils testent votre leadership et votre diplomatie.", strategie_reponse: "Communication directe d'abord, puis escalade si nécessaire. Montrez de l'empathie et du pragmatisme." },
+    { question: "Êtes-vous prêt à faire des heures supplémentaires ?", le_piege: "Refuser paraît peu engagé, mais accepter sans limite est naïf.", strategie_reponse: "Flexibilité oui, mais posez vos limites professionnellement. 'En période de rush, je m'adapte, mais je privilégie l'efficacité au quotidien.'" },
   ],
   arguments_cles: [
-    "Votre expérience directe avec les technologies utilisées par l'entreprise",
-    "Votre capacité prouvée à livrer des projets dans les délais",
-    "Votre passion pour l'apprentissage continu et l'amélioration",
+    { argument: "Expérience directe avec les technologies du poste", pourquoi_pertinent: "Vous réduisez le temps de ramp-up et apportez de la valeur immédiatement." },
+    { argument: "Capacité prouvée à livrer dans les délais", pourquoi_pertinent: "C'est ce qui distingue un bon candidat : la fiabilité et les résultats concrets." },
+    { argument: "Passion pour l'apprentissage continu", pourquoi_pertinent: "Dans un secteur en évolution rapide, l'adaptabilité est la compétence #1." },
   ],
   a_ne_pas_dire: [
-    "Ne critiquez jamais vos anciens employeurs ou collègues",
-    "Ne dites pas que vous postulez partout ou que c'est un plan B",
-    "Ne demandez pas le salaire ou les avantages dès le premier entretien",
+    { erreur: "Critiquer vos anciens employeurs ou collègues", dire_plutot: "Parlez de ce que vous avez appris de chaque expérience, même difficile." },
+    { erreur: "Dire que vous postulez partout ou que c'est un plan B", dire_plutot: "Expliquez pourquoi CETTE entreprise et CE poste vous attirent spécifiquement." },
+    { erreur: "Demander le salaire ou les avantages dès le premier entretien", dire_plutot: "Concentrez-vous sur votre valeur ajoutée. Les négociations viendront après." },
   ],
+};
+
+const difficultyBadge = {
+  facile: 'bg-green-100 text-green-700',
+  moyen: 'bg-amber-100 text-amber-700',
+  difficile: 'bg-red-100 text-red-700',
 };
 
 interface ApplicationData {
@@ -48,6 +57,8 @@ interface ApplicationData {
 const InterviewPrep = () => {
   const { id } = useParams();
   const [app, setApp] = useState<ApplicationData | null>(null);
+  const [expandedQ, setExpandedQ] = useState<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const apps = JSON.parse(localStorage.getItem("jobcraft_applications") || "[]");
@@ -55,115 +66,124 @@ const InterviewPrep = () => {
     if (found) setApp(found);
   }, [id]);
 
-  const data = mockInterview;
+  const handleExportPdf = async () => {
+    if (!contentRef.current) return;
+    toast.info("Génération du PDF...");
+    await exportToPDF(contentRef.current, generateFilename('Fiche_Entretien', app?.poste || 'Entretien'));
+    toast.success("PDF téléchargé ✓");
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <BackgroundIcons />
       <Navbar />
-      <div className="pt-28 pb-16 px-6 max-w-4xl mx-auto">
+      <div className="pt-28 pb-24 px-6 max-w-4xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to={app ? `/candidature/${app.id}` : "/dashboard"} className="text-sm text-muted-foreground hover:text-primary transition-colors mb-6 inline-block">
-            ← Retour
-          </Link>
+          <Link to={app ? `/candidature/${app.id}` : "/dashboard"} className="text-sm text-muted-foreground hover:text-primary transition-colors mb-6 inline-block">← Retour</Link>
 
-          <h1 className="text-3xl md:text-5xl font-extrabold font-display mb-4">
-            Préparation <span className="text-highlight italic">entretien</span>
+          <h1 className="text-3xl md:text-5xl font-extrabold font-display mb-2">
+            Coach <span className="text-accent italic">entretien</span>
           </h1>
-          <p className="text-muted-foreground mb-10 text-lg">
-            {app ? `${app.poste} — ${app.entreprise}` : "Fiche de préparation"}
-          </p>
+          <p className="text-muted-foreground mb-10 text-lg">{app ? `${app.poste} — ${app.entreprise}` : "Fiche de préparation"}</p>
 
-          <div className="bg-highlight/10 border border-highlight/30 rounded-[2rem] p-8 mb-10 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden shadow-[0_0_40px_rgba(124,92,255,0.1)]">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-highlight/20 blur-[80px] rounded-full pointer-events-none" />
-            <div className="w-20 h-20 shrink-0 bg-background rounded-2xl flex items-center justify-center text-4xl shadow-wow-sm border border-white/50 relative z-10">
-              🤖
-            </div>
-            <div className="relative z-10 text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-2">Coach IA JobCraft</h2>
-              <p className="text-muted-foreground">
-                J'ai analysé ton profil et l'offre d'emploi. Voici ta fiche de préparation stratégique pour maximiser tes chances.
-              </p>
-            </div>
-          </div>
-
-          {/* Section 1 */}
-          <Section title="🔍 Ce qu'ils vont chercher">
-            <div className="space-y-4">
-              {data.ce_quils_cherchent.map((item, i) => (
-                <div key={i} className="flex gap-3">
-                  <span className="text-primary font-bold mt-0.5">→</span>
-                  <div>
-                    <p className="font-semibold">{item.competence}</p>
-                    <p className="text-sm text-muted-foreground">{item.explication}</p>
+          <div ref={contentRef}>
+            {/* Section 1 */}
+            <Section title="🔍 Ce qu'ils vont chercher" bg="bg-green-50/50">
+              <div className="space-y-4">
+                {mockInterview.ce_quils_cherchent.map((item, i) => (
+                  <div key={i} className="flex gap-3 bg-card rounded-xl p-4 border border-border/20">
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold h-fit shrink-0">{item.competence}</span>
+                    <div>
+                      <p className="text-sm text-foreground/80 mb-1">{item.explication}</p>
+                      <p className="text-xs text-success font-medium">💡 {item.comment_valoriser}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </Section>
+                ))}
+              </div>
+            </Section>
 
-          {/* Section 2 */}
-          <Section title="💬 Questions probables">
-            <div className="space-y-4">
-              {data.questions_probables.map((item, i) => (
-                <div key={i} className="bg-background rounded-2xl p-6 border border-border/50 shadow-sm hover:shadow-md transition-shadow">
-                  <p className="font-bold text-foreground mb-3 text-lg">Q{i + 1}. {item.question}</p>
-                  <div className="p-4 bg-highlight/5 border border-highlight/20 rounded-xl">
-                    <p className="text-sm">💡 <span className="font-semibold text-highlight">Conseil IA :</span> {item.reponse}</p>
+            {/* Section 2 */}
+            <Section title="❓ Questions probables">
+              <div className="space-y-3">
+                {mockInterview.questions_probables.map((item, i) => (
+                  <div key={i} className="bg-card rounded-xl border border-border/20 overflow-hidden">
+                    <button
+                      onClick={() => setExpandedQ(expandedQ === i ? null : i)}
+                      className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/20 transition-colors"
+                    >
+                      <span className="font-bold text-sm pr-3">Q{i + 1}. {item.question}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${difficultyBadge[item.difficulte]}`}>{item.difficulte}</span>
+                        <motion.span animate={{ rotate: expandedQ === i ? 45 : 0 }} className="text-primary font-bold">+</motion.span>
+                      </div>
+                    </button>
+                    {expandedQ === i && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="px-4 pb-4">
+                        <div className="p-3 bg-accent/5 border border-accent/10 rounded-lg">
+                          <p className="text-sm">💡 <span className="font-semibold text-accent">Réponse suggérée :</span> {item.reponse_suggeree}</p>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </Section>
+                ))}
+              </div>
+            </Section>
 
-          {/* Section 3 */}
-          <Section title="⚠️ Questions pièges">
-            <div className="space-y-5">
-              {data.questions_pieges.map((item, i) => (
-                <div key={i} className="bg-red-50 rounded-2xl p-5 border border-red-100">
-                  <p className="font-semibold mb-2">🚩 {item.question}</p>
-                  <p className="text-sm text-muted-foreground">→ {item.conseil}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
+            {/* Section 3 */}
+            <Section title="⚠️ Questions pièges" bg="bg-red-50/30">
+              <div className="space-y-4">
+                {mockInterview.questions_pieges.map((item, i) => (
+                  <div key={i} className="bg-card rounded-xl p-5 border border-red-100">
+                    <p className="font-bold mb-2">🚩 {item.question}</p>
+                    <p className="text-xs text-destructive/70 mb-2"><strong>Le piège :</strong> {item.le_piege}</p>
+                    <p className="text-sm text-success">✓ <strong>Stratégie :</strong> {item.strategie_reponse}</p>
+                  </div>
+                ))}
+              </div>
+            </Section>
 
-          {/* Section 4 */}
-          <Section title="💪 Tes arguments clés">
-            <div className="space-y-3">
-              {data.arguments_cles.map((arg, i) => (
-                <div key={i} className="flex items-start gap-3 bg-green-50 rounded-2xl p-4 border border-green-100">
-                  <span className="text-green-600 font-bold">✓</span>
-                  <p className="text-sm">{arg}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
+            {/* Section 4 */}
+            <Section title="💪 Tes arguments clés">
+              <div className="space-y-3">
+                {mockInterview.arguments_cles.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 bg-green-50 rounded-xl p-4 border border-green-100">
+                    <span className="text-lg">⭐</span>
+                    <div>
+                      <p className="font-bold text-sm">{item.argument}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{item.pourquoi_pertinent}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
 
-          {/* Section 5 */}
-          <Section title="🚫 À ne surtout pas dire">
-            <div className="space-y-3">
-              {data.a_ne_pas_dire.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 bg-red-50 rounded-2xl p-4 border border-red-100">
-                  <span className="text-red-500 font-bold">✗</span>
-                  <p className="text-sm">{item}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <div className="text-center mt-10">
-            <button className="btn-primary px-10 py-4 text-lg hover:shadow-wow-lg hover:-translate-y-1 transition-all">
-              ⬇ Télécharger la fiche en PDF
-            </button>
+            {/* Section 5 */}
+            <Section title="🚫 À ne surtout pas dire" bg="bg-amber-50/30">
+              <div className="space-y-3">
+                {mockInterview.a_ne_pas_dire.map((item, i) => (
+                  <div key={i} className="bg-card rounded-xl p-4 border border-border/20">
+                    <p className="text-sm text-destructive line-through mb-2">✗ {item.erreur}</p>
+                    <p className="text-sm text-success">✓ {item.dire_plutot}</p>
+                  </div>
+                ))}
+              </div>
+            </Section>
           </div>
         </motion.div>
+      </div>
+
+      {/* Fixed PDF button */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <button onClick={handleExportPdf} className="btn-primary px-8 py-3.5 text-sm shadow-wow-lg">
+          ⬇ Télécharger la fiche en PDF
+        </button>
       </div>
     </div>
   );
 };
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="bg-card/80 backdrop-blur-md rounded-[2rem] shadow-wow-sm border border-white/40 p-8 mb-8 hover:shadow-wow-lg transition-shadow">
+const Section = ({ title, children, bg }: { title: string; children: React.ReactNode; bg?: string }) => (
+  <div className={`rounded-[2rem] shadow-wow-sm border border-border/30 p-8 mb-6 ${bg || 'bg-card/80'}`}>
     <h2 className="text-2xl font-extrabold font-display mb-6">{title}</h2>
     {children}
   </div>
