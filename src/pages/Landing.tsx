@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, Variants } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -82,8 +82,22 @@ const demoEntretien = `<div style="font-family: 'Space Grotesk', system-ui; colo
 </div>`;
 
 const Landing = () => {
+  const navigate = useNavigate();
   const [demoTab, setDemoTab] = useState<"cv" | "lettre" | "entretien">("cv");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Redirect onboarded users to dashboard
+  useEffect(() => {
+    const profile = localStorage.getItem("jobcraft_profile");
+    if (profile) {
+      try {
+        const parsed = JSON.parse(profile);
+        if (parsed.name && parsed.name.trim()) {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch {}
+    }
+  }, [navigate]);
 
   const demoContent = { cv: demoCV, lettre: demoLettre, entretien: demoEntretien };
 
@@ -248,7 +262,7 @@ const Landing = () => {
       </section>
 
       {/* ═══ TESTIMONIALS ═══ */}
-      < section className="py-20 px-6 z-10 relative" >
+      <section className="py-20 px-6 z-10 relative">
         <div className="max-w-6xl mx-auto">
           <h2 className="section-title mb-14 font-display">
             Ils ont <span className="text-accent italic">décroché</span> leur job
@@ -281,10 +295,10 @@ const Landing = () => {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
       {/* ═══ FEATURES ═══ */}
-      < section id="fonctionnalites" className="py-20 px-6 z-10 relative" >
+      <section id="fonctionnalites" className="py-20 px-6 z-10 relative">
         <div className="max-w-6xl mx-auto">
           <h2 className="section-title mb-14 font-display">
             Tout ce qu'il <span className="text-accent italic">faut</span> pour réussir
@@ -294,7 +308,7 @@ const Landing = () => {
               <span className="text-4xl mb-4 block">📄</span>
               <h3 className="text-xl font-bold mb-2">Sniper CV</h3>
               <p className="text-foreground/70 leading-relaxed text-sm mb-4">
-                Ton CV est réécrit mot pour mot pour coller parfaitement à chaque offre d'emploi. L'IA analyse les mots-clés ATS, restructure tes expériences et met en avant les compétences demandées. Résultat : un CV qui passe les filtres automatiques des recruteurs.
+                Ton CV est réécrit mot pour mot pour coller parfaitement à chaque offre d'emploi. L'IA analyse les mots-clés ATS, restructure tes expériences et met en avant les compétences demandées.
               </p>
               <span className="pill-badge text-primary text-xs font-semibold bg-white border-white/50">Passe les filtres ATS</span>
             </motion.div>
@@ -302,7 +316,7 @@ const Landing = () => {
               <span className="text-4xl mb-4 block">✉️</span>
               <h3 className="text-xl font-bold mb-2">Lettre Parfaite</h3>
               <p className="text-foreground/70 leading-relaxed text-sm mb-4">
-                Une lettre de motivation unique pour chaque candidature. L'IA s'adapte au ton de l'entreprise — startup décontractée ou grand groupe corporate — et construit un argumentaire percutant basé sur ton profil et les exigences du poste.
+                Une lettre de motivation unique pour chaque candidature. L'IA s'adapte au ton de l'entreprise et construit un argumentaire percutant basé sur ton profil.
               </p>
               <span className="pill-badge text-success text-xs font-semibold bg-white border-white/50">Ton adapté à l'entreprise</span>
             </motion.div>
@@ -310,7 +324,7 @@ const Landing = () => {
               <span className="text-4xl mb-4 block">🎯</span>
               <h3 className="text-xl font-bold mb-2">Coach Entretien</h3>
               <p className="text-foreground/70 leading-relaxed text-sm mb-4">
-                Une fiche de préparation complète en 5 sections : compétences recherchées, questions probables avec réponses, questions pièges avec stratégies, tes arguments clés, et les erreurs à éviter. Tout est personnalisé pour TON profil et CE poste.
+                Une fiche de préparation complète en 5 sections personnalisée pour TON profil et CE poste.
               </p>
               <span className="pill-badge text-accent text-xs font-semibold bg-white border-white/50">5 sections complètes</span>
             </motion.div>
@@ -322,7 +336,7 @@ const Landing = () => {
                 <span className="text-4xl mb-4 block">📊</span>
                 <h3 className="text-xl font-bold mb-2">Score ATS en temps réel</h3>
                 <p className="text-foreground/70 leading-relaxed text-sm">
-                  Après chaque génération, JobCraft calcule un score de correspondance entre ton CV et l'offre d'emploi. Tu vois exactement quels mots-clés ont été détectés, lesquels manquent, et tu reçois des recommandations pour améliorer ton score. L'objectif : dépasser 85% pour maximiser tes chances.
+                  Après chaque génération, JobCraft calcule un score de correspondance. Tu vois exactement quels mots-clés ont été détectés et lesquels manquent.
                 </p>
               </div>
               <div className="shrink-0 flex items-center justify-center">
@@ -338,10 +352,10 @@ const Landing = () => {
             </div>
           </motion.div>
         </div>
-      </section >
+      </section>
 
       {/* ═══ DEMO ═══ */}
-      < section id="demo" className="py-20 px-6 z-10 relative" >
+      <section id="demo" className="py-20 px-6 z-10 relative">
         <div className="max-w-4xl mx-auto">
           <h2 className="section-title mb-14 font-display">
             Un aperçu de la <span className="text-accent italic">magie</span>
@@ -360,7 +374,6 @@ const Landing = () => {
                 <div className="bg-background rounded-full px-4 py-1 text-xs text-muted-foreground w-fit">jobcraft.ai/demo</div>
               </div>
             </div>
-            {/* Tabs */}
             <div className="flex border-b border-border/50">
               {([
                 { key: "cv", label: "CV" },
@@ -390,16 +403,15 @@ const Landing = () => {
             </div>
           </motion.div>
         </div>
-      </section >
+      </section>
 
       {/* ═══ PRICING ═══ */}
-      < section id="tarifs" className="py-20 px-6 z-10 relative" >
+      <section id="tarifs" className="py-20 px-6 z-10 relative">
         <div className="max-w-5xl mx-auto">
           <h2 className="section-title mb-14 font-display">
             Des prix <span className="text-accent italic">simples</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            {/* Gratuit */}
             <motion.div whileHover={{ y: -8 }} className="bg-card rounded-4xl p-8 shadow-wow-sm flex flex-col border border-white/50">
               <span className="pill-badge text-xs font-semibold mb-4 w-fit">Pour commencer</span>
               <div className="mb-6">
@@ -416,7 +428,6 @@ const Landing = () => {
               <Link to="/onboarding" className="btn-outline w-full text-center">Commencer gratuitement</Link>
             </motion.div>
 
-            {/* Starter */}
             <motion.div whileHover={{ y: -8 }} className="bg-card rounded-4xl p-8 shadow-wow-sm border-2 border-primary flex flex-col relative">
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold">
                 Le plus populaire
@@ -436,7 +447,6 @@ const Landing = () => {
               <Link to="/onboarding" className="btn-primary w-full text-center hover:shadow-wow-sm">Commencer avec Starter</Link>
             </motion.div>
 
-            {/* Pro */}
             <motion.div whileHover={{ y: -8 }} className="rounded-4xl p-8 shadow-wow-lg flex flex-col bg-foreground text-card">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-highlight text-highlight-foreground w-fit mb-4">
                 Tout inclus
@@ -469,7 +479,7 @@ const Landing = () => {
           <div className="space-y-4">
             {[
               { q: "Comment fonctionne la génération de CV ?", a: "L'IA analyse l'offre d'emploi, identifie les compétences et mots-clés demandés, puis réécrit ton CV pour maximiser la correspondance. Le résultat passe les filtres ATS automatiques des recruteurs." },
-              { q: "Mes données sont-elles en sécurité ?", a: "Absolument. Toutes tes données sont stockées localement dans ton navigateur. Nous ne transférons rien vers nos serveurs. Ta clé API reste privée." },
+              { q: "Mes données sont-elles en sécurité ?", a: "Absolument. Toutes tes données sont chiffrées et stockées de manière sécurisée. Nous ne partageons jamais tes informations." },
               { q: "Puis-je annuler mon abonnement ?", a: "Oui, à tout moment et sans engagement. Tu conserves l'accès jusqu'à la fin de ta période de facturation." },
               { q: "Quel modèle d'IA est utilisé ?", a: "JobCraft utilise l'API Gemini de Google, l'un des modèles les plus performants pour la compréhension et la rédaction de textes professionnels." },
               { q: "Les CV générés passent-ils les filtres ATS ?", a: "Oui ! C'est notre spécialité. L'algorithme anti-ATS analyse les mots-clés de l'offre et les intègre naturellement dans ton CV. Score moyen de correspondance : 87%." },
@@ -511,7 +521,7 @@ const Landing = () => {
       </section>
 
       {/* ═══ FINAL CTA ═══ */}
-      < section className="py-24 px-6 z-10 relative" >
+      <section className="py-24 px-6 z-10 relative">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -535,10 +545,10 @@ const Landing = () => {
             Commence maintenant →
           </Link>
         </motion.div>
-      </section >
+      </section>
 
       <Footer />
-    </div >
+    </div>
   );
 };
 

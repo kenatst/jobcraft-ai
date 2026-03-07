@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -56,6 +56,7 @@ interface ApplicationData {
 
 const InterviewPrep = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [app, setApp] = useState<ApplicationData | null>(null);
   const [expandedQ, setExpandedQ] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -64,14 +65,22 @@ const InterviewPrep = () => {
     const apps = JSON.parse(localStorage.getItem("jobcraft_applications") || "[]");
     const found = apps.find((a: ApplicationData) => a.id === id);
     if (found) setApp(found);
-  }, [id]);
+    else navigate("/dashboard", { replace: true });
+  }, [id, navigate]);
 
   const handleExportPdf = async () => {
     if (!contentRef.current) return;
     toast.info("Génération du PDF...");
-    await exportToPDF(contentRef.current, generateFilename('Fiche_Entretien', app?.poste || 'Entretien'));
-    toast.success("PDF téléchargé ✓");
+    try {
+      await exportToPDF(contentRef.current, generateFilename('Fiche_Entretien', app?.poste || 'Entretien'));
+      toast.success("PDF téléchargé ✓");
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error("Erreur lors de l'export PDF");
+    }
   };
+
+  if (!app) return null;
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -79,12 +88,19 @@ const InterviewPrep = () => {
       <Navbar />
       <div className="pt-28 pb-24 px-6 max-w-4xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to={app ? `/candidature/${app.id}` : "/dashboard"} className="text-sm text-muted-foreground hover:text-primary transition-colors mb-6 inline-block">← Retour</Link>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <span>/</span>
+            <Link to={`/candidature/${app.id}`} className="hover:text-primary transition-colors">{app.poste}</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium">Préparation entretien</span>
+          </div>
 
           <h1 className="text-3xl md:text-5xl font-extrabold font-display mb-2">
             Coach <span className="text-accent italic">entretien</span>
           </h1>
-          <p className="text-muted-foreground mb-10 text-lg">{app ? `${app.poste} — ${app.entreprise}` : "Fiche de préparation"}</p>
+          <p className="text-muted-foreground mb-10 text-lg">{app.poste} — {app.entreprise}</p>
 
           <div ref={contentRef}>
             {/* Section 1 */}

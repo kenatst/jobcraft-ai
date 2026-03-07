@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -16,6 +16,19 @@ const Onboarding = () => {
   const [skillInput, setSkillInput] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState(1);
   const [uploadMode, setUploadMode] = useState<"upload" | "manual">("manual");
+
+  // Redirect if already onboarded
+  useEffect(() => {
+    const saved = localStorage.getItem("jobcraft_profile");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.name && parsed.name.trim()) {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch {}
+    }
+  }, [navigate]);
 
   const handleSkillKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && skillInput.trim()) {

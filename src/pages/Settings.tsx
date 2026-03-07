@@ -16,10 +16,14 @@ const Settings = () => {
 
   useEffect(() => {
     const saved = localStorage.getItem("jobcraft_profile");
-    if (saved) setProfile(JSON.parse(saved));
+    if (!saved) {
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    setProfile(JSON.parse(saved));
     const tmpl = localStorage.getItem("jobcraft_template");
     if (tmpl) setSelectedTemplate(Number(tmpl));
-  }, []);
+  }, [navigate]);
 
   const saveProfile = () => {
     localStorage.setItem("jobcraft_profile", JSON.stringify(profile));
@@ -60,7 +64,12 @@ const Settings = () => {
       <Navbar />
       <div className="pt-28 pb-16 px-6 max-w-3xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors mb-6 inline-block">← Retour au dashboard</Link>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium">Paramètres</span>
+          </div>
 
           <h1 className="text-3xl md:text-5xl font-extrabold font-display mb-4">
             Para<span className="text-accent italic">mètres</span>
@@ -117,7 +126,7 @@ const Settings = () => {
           {/* Danger Zone */}
           <div className="bg-destructive/5 border-2 border-destructive/20 rounded-[2rem] p-8 mt-8">
             <h2 className="text-xl font-extrabold font-display text-destructive mb-2">🚨 Zone de danger</h2>
-            <p className="text-sm text-destructive/70 mb-6">Supprimer toutes tes données. Cette action est irréversible.</p>
+            <p className="text-sm text-destructive/70 mb-6">Supprimer toutes tes données et revenir à la page d'accueil.</p>
             <button onClick={clearAllData} className="px-6 py-3 rounded-full bg-destructive text-destructive-foreground font-bold text-sm hover:brightness-90 transition-all">
               Supprimer toutes mes données
             </button>

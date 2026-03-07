@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -29,9 +29,11 @@ interface ApplicationData {
 
 const ApplicationDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [app, setApp] = useState<ApplicationData | null>(null);
   const [notes, setNotes] = useState("");
   const [saveIndicator, setSaveIndicator] = useState(false);
+  const [activeDoc, setActiveDoc] = useState<'cv' | 'lettre'>('cv');
   const cvRef = useRef<HTMLDivElement>(null);
   const lettreRef = useRef<HTMLDivElement>(null);
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>();
@@ -63,8 +65,14 @@ const ApplicationDetail = () => {
   const handleExportPdf = async (type: 'cv' | 'lettre') => {
     const el = type === 'cv' ? cvRef.current : lettreRef.current;
     if (!el) return;
-    await exportToPDF(el, generateFilename(type === 'cv' ? 'CV' : 'Lettre', app?.poste || '', app?.entreprise));
-    toast.success("PDF téléchargé ✓");
+    toast.info("Génération du PDF...");
+    try {
+      await exportToPDF(el, generateFilename(type === 'cv' ? 'CV' : 'Lettre', app?.poste || '', app?.entreprise));
+      toast.success("PDF téléchargé ✓");
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error("Erreur lors de l'export PDF");
+    }
   };
 
   if (!app) {
@@ -72,8 +80,9 @@ const ApplicationDetail = () => {
       <div className="min-h-screen bg-background">
         <BackgroundIcons /><Navbar />
         <div className="pt-28 pb-16 px-6 max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-muted-foreground">Candidature introuvable</p>
-          <Link to="/dashboard" className="text-primary underline mt-4 inline-block">Retour au dashboard</Link>
+          <p className="text-5xl mb-4">🔍</p>
+          <p className="text-muted-foreground mb-4">Candidature introuvable</p>
+          <Link to="/dashboard" className="btn-primary text-sm">← Retour au dashboard</Link>
         </div>
       </div>
     );
@@ -85,7 +94,12 @@ const ApplicationDetail = () => {
       <Navbar />
       <div className="pt-28 pb-16 px-6 max-w-4xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors mb-6 inline-block">← Retour au dashboard</Link>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium">{app.poste}</span>
+          </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -127,29 +141,49 @@ const ApplicationDetail = () => {
             />
           </div>
 
-          {/* Documents */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            {[
-              { label: "📄 Mon CV", html: app.cvHtml, ref: cvRef, type: 'cv' as const },
-              { label: "✉️ Ma lettre", html: app.lettreHtml, ref: lettreRef, type: 'lettre' as const },
-            ].map((doc) => (
-              <div key={doc.type} className="bg-card rounded-[2rem] shadow-wow-sm border border-border/30 overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-3 bg-muted/30 border-b border-border/50">
-                  <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                  <div className="w-3 h-3 rounded-full bg-highlight/60" />
-                  <div className="w-3 h-3 rounded-full bg-success/60" />
-                  <span className="ml-auto text-xs text-muted-foreground font-semibold">{doc.label}</span>
-                </div>
-                <div className="p-3">
-                  <div ref={doc.ref} className="bg-card rounded-2xl p-5 min-h-[200px] text-sm" dangerouslySetInnerHTML={{ __html: doc.html || "<p class='text-muted-foreground'>Non généré</p>" }} />
-                </div>
-                <div className="px-5 pb-4">
-                  <button onClick={() => handleExportPdf(doc.type)} className="btn-outline w-full py-2.5 text-sm">
-                    ⬇ Télécharger en PDF
-                  </button>
-                </div>
-              </div>
-            ))}
+          {/* Document tabs */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={() => setActiveDoc('cv')}
+              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeDoc === 'cv' ? 'bg-primary text-primary-foreground shadow-wow-sm' : 'bg-card border border-border/50 text-muted-foreground'}`}
+            >
+              📄 Mon CV
+            </button>
+            <button
+              onClick={() => setActiveDoc('lettre')}
+              className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${activeDoc === 'lettre' ? 'bg-primary text-primary-foreground shadow-wow-sm' : 'bg-card border border-border/50 text-muted-foreground'}`}
+            >
+              ✉️ Ma lettre
+            </button>
+          </div>
+
+          {/* Document preview */}
+          <div className="bg-card rounded-[2rem] shadow-wow-sm border border-border/30 overflow-hidden mb-6">
+            <div className="flex items-center gap-2 px-5 py-3 bg-muted/30 border-b border-border/50">
+              <div className="w-3 h-3 rounded-full bg-destructive/60" />
+              <div className="w-3 h-3 rounded-full bg-highlight/60" />
+              <div className="w-3 h-3 rounded-full bg-success/60" />
+              <span className="ml-auto text-xs text-muted-foreground font-semibold">
+                {activeDoc === 'cv' ? '📄 Mon CV' : '✉️ Ma lettre'}
+              </span>
+            </div>
+            <div className="p-3">
+              <div
+                ref={cvRef}
+                className={`bg-white rounded-2xl p-5 min-h-[200px] text-sm ${activeDoc !== 'cv' ? 'hidden' : ''}`}
+                dangerouslySetInnerHTML={{ __html: app.cvHtml || "<p class='text-muted-foreground'>Non généré</p>" }}
+              />
+              <div
+                ref={lettreRef}
+                className={`bg-white rounded-2xl p-5 min-h-[200px] text-sm ${activeDoc !== 'lettre' ? 'hidden' : ''}`}
+                dangerouslySetInnerHTML={{ __html: app.lettreHtml || "<p class='text-muted-foreground'>Non généré</p>" }}
+              />
+            </div>
+            <div className="px-5 pb-4">
+              <button onClick={() => handleExportPdf(activeDoc)} className="btn-outline w-full py-2.5 text-sm">
+                ⬇ Télécharger en PDF
+              </button>
+            </div>
           </div>
 
           {/* Interview prep CTA */}
@@ -161,7 +195,7 @@ const ApplicationDetail = () => {
               <p className="text-4xl mb-3">🎯</p>
               <h2 className="text-xl font-bold mb-2">Entretien décroché !</h2>
               <p className="text-muted-foreground mb-5">Prépare-toi avec une fiche personnalisée</p>
-              <Link to={`/preparation-entretien/${app.id}`} className="btn-primary text-sm animate-pulse-coral">
+              <Link to={`/preparation-entretien/${app.id}`} className="btn-primary text-sm">
                 🎯 Générer ma préparation d'entretien →
               </Link>
             </motion.div>

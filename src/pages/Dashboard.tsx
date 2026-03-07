@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -15,13 +15,20 @@ type Application = {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
 
   useEffect(() => {
+    // Redirect if no profile
+    const profile = localStorage.getItem("jobcraft_profile");
+    if (!profile) {
+      navigate("/onboarding", { replace: true });
+      return;
+    }
     const saved = localStorage.getItem("jobcraft_applications");
     if (saved) setApplications(JSON.parse(saved));
-  }, []);
+  }, [navigate]);
 
   const saveApps = (apps: Application[]) => {
     setApplications(apps);
@@ -48,20 +55,32 @@ const Dashboard = () => {
   };
 
   const credits = 12;
+  const profileData = JSON.parse(localStorage.getItem("jobcraft_profile") || "{}");
 
   return (
     <div className="min-h-screen bg-background relative">
       <BackgroundIcons />
       <Navbar />
       <div className="pt-28 pb-16 px-4 sm:px-6 max-w-7xl mx-auto relative z-10">
-        {/* Header */}
+        {/* Welcome header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl md:text-5xl font-extrabold font-display">
-            Mes <span className="text-accent italic">candidatures</span>
-          </h1>
+          <div>
+            <h1 className="text-3xl md:text-5xl font-extrabold font-display">
+              {profileData.name ? (
+                <>Salut <span className="text-accent italic">{profileData.name.split(' ')[0]}</span> 👋</>
+              ) : (
+                <>Mes <span className="text-accent italic">candidatures</span></>
+              )}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              {applications.length === 0
+                ? "Prêt à lancer ta première candidature ?"
+                : `${applications.length} candidature${applications.length > 1 ? 's' : ''} en cours`}
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <span className="pill-badge text-primary font-semibold text-sm">
-              {credits} candidatures restantes
+              {credits} crédits restants
             </span>
             <Link to="/nouvelle-candidature" className="btn-primary py-2.5 text-sm">
               + Nouvelle candidature
@@ -166,7 +185,7 @@ const Dashboard = () => {
                 transition={{ delay: i * 0.03 }}
                 className="bg-card/90 backdrop-blur-sm rounded-2xl shadow-sm border border-border/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:shadow-wow-sm transition-all"
               >
-                <div className="flex items-center gap-3">
+                <Link to={`/candidature/${app.id}`} className="flex items-center gap-3 flex-1">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
                     ['bg-primary/15 text-primary', 'bg-accent/15 text-accent', 'bg-success/15 text-success'][i % 3]
                   }`}>
@@ -176,10 +195,10 @@ const Dashboard = () => {
                     <h3 className="font-bold">{app.poste}</h3>
                     <p className="text-sm text-muted-foreground">{app.entreprise} · {app.date}</p>
                   </div>
-                </div>
+                </Link>
                 <div className="flex items-center gap-2">
                   <Link to={`/candidature/${app.id}`} className="btn-outline text-xs !py-2 !px-4">
-                    Voir les docs
+                    Voir →
                   </Link>
                   <button onClick={() => handleDelete(app.id)} className="text-xs text-destructive/50 hover:text-destructive px-2">✕</button>
                 </div>
