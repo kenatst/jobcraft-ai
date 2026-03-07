@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import BackgroundIcons from "@/components/BackgroundIcons";
@@ -18,34 +18,30 @@ interface ProfileData {
 }
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [appCount, setAppCount] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("jobcraft_profile");
-    if (saved) setProfile(JSON.parse(saved));
+    if (!saved) {
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    const parsed = JSON.parse(saved);
+    if (!parsed.name) {
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    setProfile(parsed);
     const apps = JSON.parse(localStorage.getItem("jobcraft_applications") || "[]");
     setAppCount(apps.length);
-  }, []);
+  }, [navigate]);
+
+  if (!profile) return null;
 
   const getInitials = (name: string) => name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const skillsList = profile?.skills?.split(",").map(s => s.trim()).filter(Boolean) || [];
-
-  if (!profile || !profile.name) {
-    return (
-      <div className="min-h-screen bg-background relative">
-        <BackgroundIcons /><Navbar />
-        <div className="pt-28 pb-16 px-6 max-w-3xl mx-auto text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="text-5xl mb-4">👤</p>
-            <h1 className="text-2xl font-bold mb-2">Pas encore de profil</h1>
-            <p className="text-muted-foreground mb-8">Crée ton profil pour commencer</p>
-            <Link to="/onboarding" className="btn-primary text-sm">Créer mon profil →</Link>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -53,7 +49,12 @@ const Profile = () => {
       <Navbar />
       <div className="pt-28 pb-16 px-6 max-w-3xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors mb-6 inline-block">← Retour au dashboard</Link>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium">Mon profil</span>
+          </div>
 
           <div className="bg-card/80 rounded-[2rem] shadow-wow-lg border border-border/30 p-10 mb-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[60px] rounded-full pointer-events-none" />
@@ -98,6 +99,12 @@ const Profile = () => {
               <p className="text-foreground/80 leading-relaxed">{profile.education}</p>
             </div>
           )}
+
+          {/* Quick actions */}
+          <div className="flex flex-wrap gap-3">
+            <Link to="/nouvelle-candidature" className="btn-primary text-sm">+ Nouvelle candidature</Link>
+            <Link to="/settings" className="btn-outline text-sm">⚙️ Paramètres</Link>
+          </div>
         </motion.div>
       </div>
     </div>

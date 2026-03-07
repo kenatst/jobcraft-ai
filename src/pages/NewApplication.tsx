@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -19,8 +19,17 @@ const NewApplication = () => {
   const [atsScore] = useState(87);
   const [atsKeywords] = useState(["React", "TypeScript", "Agile", "API REST", "Git"]);
   const [atsMissing] = useState(["Docker", "CI/CD"]);
+  const [generatedApp, setGeneratedApp] = useState<any>(null);
   const cvRef = useRef<HTMLDivElement>(null);
   const lettreRef = useRef<HTMLDivElement>(null);
+
+  // Redirect if no profile
+  useEffect(() => {
+    const profile = localStorage.getItem("jobcraft_profile");
+    if (!profile) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [navigate]);
 
   const loadingSteps = [
     { icon: "🔍", label: "Analyse de l'offre d'emploi...", pct: 20 },
@@ -56,6 +65,7 @@ const NewApplication = () => {
 
     const existing = JSON.parse(localStorage.getItem("jobcraft_applications") || "[]");
     localStorage.setItem("jobcraft_applications", JSON.stringify([newApp, ...existing]));
+    setGeneratedApp(newApp);
 
     setLoading(false);
     setGenerated(true);
@@ -71,19 +81,21 @@ const NewApplication = () => {
       entrepriseName
     );
     toast.info("Génération du PDF...");
-    await exportToPDF(el, filename);
-    toast.success("PDF téléchargé ✓");
-  };
-
-  const handleSave = () => {
-    toast.success("Candidature enregistrée ✓");
-    navigate("/dashboard");
-  };
-
-  const getAppData = () => {
     try {
-      return JSON.parse(localStorage.getItem("jobcraft_applications") || "[{}]")[0] || {};
-    } catch { return {}; }
+      await exportToPDF(el, filename);
+      toast.success("PDF téléchargé ✓");
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error("Erreur lors de l'export PDF");
+    }
+  };
+
+  const handleGoToApp = () => {
+    if (generatedApp) {
+      navigate(`/candidature/${generatedApp.id}`);
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -92,6 +104,13 @@ const NewApplication = () => {
       <Navbar />
       <div className="pt-28 pb-16 px-6 max-w-4xl mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <span>/</span>
+            <span className="text-foreground font-medium">Nouvelle candidature</span>
+          </div>
+
           <h1 className="text-3xl md:text-5xl font-extrabold font-display text-center mb-4">
             Nouvelle <span className="text-accent italic">candidature</span>
           </h1>
@@ -201,7 +220,7 @@ const NewApplication = () => {
                 </button>
               </div>
 
-              {/* Document preview */}
+              {/* Document preview - both rendered, only one visible */}
               <div className="bg-card rounded-[2rem] shadow-wow-lg border border-border/30 overflow-hidden mb-10">
                 <div className="flex items-center gap-2 px-5 py-4 bg-muted/30 border-b border-border/50">
                   <div className="w-3 h-3 rounded-full bg-destructive/60" />
@@ -215,11 +234,14 @@ const NewApplication = () => {
                 </div>
                 <div className="p-2">
                   <div
-                    ref={activeTab === 'cv' ? cvRef : lettreRef}
-                    className="bg-card rounded-2xl p-6 min-h-[400px]"
-                    dangerouslySetInnerHTML={{
-                      __html: activeTab === "cv" ? getAppData().cvHtml || "" : getAppData().lettreHtml || "",
-                    }}
+                    ref={cvRef}
+                    className={`bg-white rounded-2xl p-6 min-h-[400px] ${activeTab !== 'cv' ? 'hidden' : ''}`}
+                    dangerouslySetInnerHTML={{ __html: generatedApp?.cvHtml || "" }}
+                  />
+                  <div
+                    ref={lettreRef}
+                    className={`bg-white rounded-2xl p-6 min-h-[400px] ${activeTab !== 'lettre' ? 'hidden' : ''}`}
+                    dangerouslySetInnerHTML={{ __html: generatedApp?.lettreHtml || "" }}
                   />
                 </div>
               </div>
@@ -235,10 +257,10 @@ const NewApplication = () => {
                   🔄 Régénérer
                 </button>
                 <button
-                  onClick={handleSave}
+                  onClick={handleGoToApp}
                   className="btn-primary px-8 py-3.5 text-sm hover:shadow-wow-sm"
                 >
-                  Enregistrer la candidature
+                  Voir la candidature →
                 </button>
               </div>
             </>
